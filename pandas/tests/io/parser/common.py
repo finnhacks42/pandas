@@ -343,6 +343,23 @@ bar,foo"""
         expected = DataFrame({'A': [True, False], 'B': [False, True]})
         tm.assert_frame_equal(result, expected)
 
+    def test_reading_bool_with_nans_with_dtype_bool_raises_error(self):
+        # tests issue 20591
+        # if we specify a dtype of bool for a column we should get an error
+        data = "false,1\n,1"
+        with tm.assert_raises_regex(ValueError, 'Boolean column has NA values in column 1'):
+            self.read_csv(StringIO(data), header=None,
+                          names=['a', 'b'], dtype={'a': bool})
+
+    def test_reading_bool_with_nans_with_dtype_float(self):
+        # Test for issue #16698
+        data = "false,1\n,1"
+        expected = DataFrame({'a': [0.0, np.nan],'b': [1, 1]})
+        expected['a'] = expected['a'].astype('float32')
+        result = self.read_csv(StringIO(data), header=None,
+                               names=['a', 'b'], dtype={'a': 'float32'})
+        tm.assert_frame_equal(result, expected)
+
     def test_int_conversion(self):
         data = """A,B
 1.0,1

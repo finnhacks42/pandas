@@ -485,19 +485,3 @@ No,No,No"""
             ['x' * (1 << 20) for _ in range(2100)]))
         df = self.read_csv(csv, low_memory=False)
         assert not df.empty
-
-    def test_type_bool_with_nas_raises_error(self):
-        # if we specify a dtype of bool for a column we should get an error
-        data = "false,1\n,1"
-        with tm.assert_raises_regex(ValueError, 'Boolean column has NA values in column 1'):
-            self.read_csv(StringIO(data), header=None,
-                          names=['a', 'b'], dtype={'a': bool})
-
-    def test_casting_boolean_nas(self):
-        # Test for issue #16698
-        data = "false,1\n,1"
-        expected = DataFrame({'a': [0.0, np.nan],'b': [1, 1]})
-        expected['c1'] = expected['c1'].astype('float32')
-        result = self.read_csv(StringIO(data), header=None,
-                               names=['a', 'b'], dtype={'c1': 'float32'})
-        tm.assert_frame_equal(result, expected)
