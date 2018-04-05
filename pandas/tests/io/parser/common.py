@@ -347,7 +347,7 @@ bar,foo"""
         # tests issue 20591
         # if we specify a dtype of bool for a column we should get an error
         data = "false,1\n,1"
-        with tm.assert_raises_regex(ValueError, 'Boolean column has NA values in column 1'):
+        with tm.assert_raises_regex(ValueError, 'Unable to convert column a to type bool'):
             self.read_csv(StringIO(data), header=None,
                           names=['a', 'b'], dtype={'a': bool})
 
