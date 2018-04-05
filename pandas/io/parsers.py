@@ -20,7 +20,8 @@ from pandas.core.dtypes.common import (
     is_list_like, is_integer_dtype,
     is_float, is_dtype_equal,
     is_object_dtype, is_string_dtype,
-    is_scalar, is_categorical_dtype)
+    is_scalar, is_categorical_dtype,
+    is_bool_dtype, pandas_dtype)
 from pandas.core.dtypes.dtypes import CategoricalDtype
 from pandas.core.dtypes.missing import isna
 from pandas.core.dtypes.cast import astype_nansafe
@@ -1570,6 +1571,10 @@ class ParserBase(object):
 
                 # type specified in dtype param
                 if cast_type and not is_dtype_equal(cvals, cast_type):
+                    # work around astype casting nan's in bool to True.
+                    if is_bool_dtype(cast_type) and na_count > 0:
+                        raise ValueError("Unable to convert column %s to "
+                                         "type %s" % (c, pandas_dtype(cast_type)))
                     cvals = self._cast_types(cvals, cast_type, c)
 
             result[c] = cvals
@@ -1608,7 +1613,7 @@ class ParserBase(object):
             try:
                 result = lib.maybe_convert_numeric(values, na_values, False)
                 na_count = isna(result).sum()
-            except Exception:
+            except Exception: # maybe_convert_numeric throws Exception if values cannot be converted to numeric array.
                 result = values
                 if values.dtype == np.object_:
                     na_count = parsers.sanitize_objects(result, na_values,
@@ -1659,6 +1664,7 @@ class ParserBase(object):
 
         else:
             try:
+
                 values = astype_nansafe(values, cast_type, copy=True)
             except ValueError:
                 raise ValueError("Unable to convert column %s to "
